@@ -1,0 +1,71 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        applicationId "com.xy.multichannelpackage"
+        minSdkVersion 16
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+
+    // signingConfigs代码块一定要写在buildTypes前面，否则会报下面这种错：
+    // Could not find property 'debugConfig' on SigningConfig container.
+//    signingConfigs {
+//        debugConfig {
+//            storeFile file("../mcp.jks") //签名文件
+//            storePassword "mcp123"        //签名文件密码
+//            keyAlias "mcp_key"            //签名Alias
+//            keyPassword "mcp123"          //签名密码
+//        }
+//
+//        release{
+//            storeFile file("../mcp.jks") //签名文件路径
+//            storePassword "mcp123"        //签名文件密码
+//            keyAlias "mcp_key"            //签名Alias
+//            keyPassword "mcp123"          //签名密码
+//        }
+//    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            // 自定义输出配置
+            applicationVariants.all { variant ->
+                variant.outputs.each { output ->
+                    def outputFile = output.outputFile
+                    if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                        // 输出apk名称为mcp_v1.0_name.apk
+                        def fileName = "mcp_v${defaultConfig.versionName}_${variant.productFlavors[0].name}.apk"
+                        output.outputFile = new File(outputFile.parent, fileName)
+                    }
+                }
+            }
+        }
+    }
+
+    productFlavors {
+        // 定义需要发布的应用市场的名称
+        huawei {}
+        meizu{}
+        xiaomi {}
+        wandoujia {}
+        baidu {}
+        googleplay {}
+    }
+
+    productFlavors.all {
+        flavor -> flavor.manifestPlaceholders = [UMENG_CHANNEL_VALUE: name]
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:23.1.1'
+}
